@@ -18,7 +18,7 @@ export default function AuthScreen({ onAuth }) {
       const body = mode === 'login' ? { user_id: userId, password } : { user_id: userId, password, display_name: displayName || userId }
       const path = endpoint.replace('/api', '')   // IMPORTANT
       const r = await api.post(path, body)
-      onAuth({ ...r.data, is_guest: false })
+      onAuth({ ...r, is_guest: false })
     } catch(e) {
       setError(e?.detail || 'Something went wrong')
     }
@@ -29,7 +29,7 @@ export default function AuthScreen({ onAuth }) {
     setLoading(true)
     try {
       const r = await api.post('/guest', {})
-      onAuth({ ...r.data, is_guest: true })
+      onAuth({ ...r, is_guest: true })
     } catch {
       onAuth({ user_id: 'guest_' + Math.random().toString(36).slice(2,8), display_name: 'Guest', token: null, is_guest: true })
     }
