@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { api } from '../api'
 import { Icon } from '../icons.jsx'
 
 function MemoryCard({ memory, index }) {
@@ -67,15 +67,15 @@ export default function MemoryProfile({ userId }) {
   const [activeTab, setActiveTab] = useState('insights')
 
   useEffect(() => {
-    Promise.all([
-      axios.get(`/api/memory/${userId}`).catch(() => ({ data: { memories: [], local_history: [] } })),
-      axios.get(`/api/learning-insights/${userId}`).catch(() => ({ data: null }))
-    ]).then(([memRes, insRes]) => {
-      setData(memRes.data)
-      setInsights(insRes.data)
-      setLoading(false)
-    })
-  }, [userId])
+  Promise.all([
+    api.get(`/memory/${userId}`).catch(() => ({ memories: [], local_history: [] })),
+    api.get(`/learning-insights/${userId}`).catch(() => null)
+  ]).then(([memRes, insRes]) => {
+    setData(memRes)
+    setInsights(insRes)
+    setLoading(false)
+  })
+}, [userId])
 
   const memories = data?.memories || []
   const history  = data?.local_history || []
