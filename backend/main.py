@@ -10,10 +10,10 @@ load_dotenv()
 app = FastAPI(title="CodeMind API v3")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://codemind-tau.vercel.app", "http://localhost:5173"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 # ── In-memory stores ────────────────────────────────────────────────────────
@@ -401,10 +401,35 @@ Return JSON:
 {{"id":"slug","title":"Title","difficulty":"{req.difficulty}","topic":"{req.topic}","description":"...","examples":[{{"input":"...","output":"..."}}],"test_cases":[{{"input":"...","expected_output":"..."}}],"starter_code":{{"python":"# code\\n","javascript":"// code\\n","java":"// code\\n"}}}}"""
     raw = call_bedrock(system, msg, max_tokens=1200)
     try:
-        clean = re.sub(r"```[a-z]*\n?", "", raw).strip()
+        clean = re.sub(r"```[a-z]*\n?", "", raw)
+        clean = re.sub(r"```", "", clean).strip()
+        start = clean.find("{"); end = clean.rfind("}") + 1
+        if start != -1 and end > start:
+            clean = clean[start:end]
         return {"problem": json.loads(clean), "tailored_to": weak}
-    except:
-        return {"error": "Parse failed", "raw": raw}
+    except Exception as e:
+        print(f"Parse error: {e} | RAW: {raw[:200]}")
+        return {
+            "problem": {
+                "id": f"{req.topic.lower().replace(' ','-')}-practice",
+                "title": f"{req.difficulty} {req.topic} Problem",
+                "difficulty": req.difficulty,
+                "topic": req.topic,
+                "description": "Given an array of integers, return the sum of all elements.\n\nInput: space-separated integers\nOutput: the total sum",
+                "examples": [{"input": "1 2 3 4 5", "output": "15"}],
+                "test_cases": [
+                    {"input": "1 2 3 4 5", "expected_output": "15"},
+                    {"input": "0", "expected_output": "0"}
+                ],
+                "starter_code": {
+                    "python": "def solution(nums):\n    # Write your solution here\n    pass\n\nnums = list(map(int, input().split()))\nprint(solution(nums))",
+                    "javascript": "const nums = require('fs').readFileSync('/dev/stdin','utf8').trim().split(' ').map(Number);\nfunction solution(nums) {\n    // Write your solution here\n}\nconsole.log(solution(nums));",
+                    "java": "import java.util.*;\npublic class Main {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        // Write your solution here\n        System.out.println(0);\n    }\n}"
+                }
+            },
+            "tailored_to": weak,
+            "fallback": True
+        }
 
 
 @app.get("/problems")
