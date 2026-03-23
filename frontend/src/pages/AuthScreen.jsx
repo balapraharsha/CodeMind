@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import axios from 'axios'
+import { api } from '../api'
 import { Icon } from '../icons.jsx'
 
 export default function AuthScreen({ onAuth }) {
@@ -16,10 +16,11 @@ export default function AuthScreen({ onAuth }) {
     try {
       const endpoint = mode === 'login' ? '/api/login' : '/api/signup'
       const body = mode === 'login' ? { user_id: userId, password } : { user_id: userId, password, display_name: displayName || userId }
-      const r = await axios.post(endpoint, body)
+      const path = endpoint.replace('/api', '')   // IMPORTANT
+      const r = await api.post(path, body)
       onAuth({ ...r.data, is_guest: false })
     } catch(e) {
-      setError(e.response?.data?.detail || 'Something went wrong')
+      setError(e?.detail || 'Something went wrong')
     }
     setLoading(false)
   }
@@ -27,7 +28,7 @@ export default function AuthScreen({ onAuth }) {
   const continueGuest = async () => {
     setLoading(true)
     try {
-      const r = await axios.post('/api/guest')
+      const r = await api.post('/guest', {})
       onAuth({ ...r.data, is_guest: true })
     } catch {
       onAuth({ user_id: 'guest_' + Math.random().toString(36).slice(2,8), display_name: 'Guest', token: null, is_guest: true })
