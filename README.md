@@ -1,233 +1,249 @@
-# Codemind
+# CODEMIND — AI Coding Mentor
 
-Codemind is a coding practice platform that behaves like a tutor, not a judge.
-Instead of just checking correctness, it tracks how you solve problems and improves its feedback over time.
+> **Train Smarter. Memory Enhanced.**
+> An AI-powered coding platform that remembers every mistake and crafts personalised hints, feedback, and problems tailored to your weak areas.
 
----
-
-## What It Does
-
-Most platforms follow this loop:
-
-```
-Input → Run → Pass/Fail → Done
-```
-
-Codemind changes that to:
-
-```
-Input → Execute → Analyze → Learn → Adapt feedback
-```
-
-It focuses on **how you solve problems**, not just whether you got them right.
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-codemind--tau.vercel.app-00E5FF?style=for-the-badge)](https://codemind-tau.vercel.app/)
+[![GitHub](https://img.shields.io/badge/GitHub-CodeMind-8B5CF6?style=for-the-badge&logo=github)](https://github.com/balapraharsha/CodeMind)
 
 ---
 
-## Key Features
+## What is CodeMind?
 
-### 1. Real Code Execution
+Most coding platforms treat every session as isolated — they forget you the moment you close the tab. **CodeMind is different.** It builds a persistent memory profile using the [Hindsight](https://hindsight.vectorize.io) vector memory engine and uses that history to power every hint, feedback, and AI-generated problem you receive.
 
-* Runs user code in a sandboxed environment (e.g. Firecracker)
-* Supports multiple languages (extensible)
-* Prevents system-level access
+The result: an AI mentor that genuinely gets smarter the more you use it.
 
 ---
 
-### 2. Feedback That Evolves
+## Features
 
-* Explains errors in simple terms
-* Suggests improvements instead of just showing output
-* Adjusts explanations based on past attempts
+### AI Problem Generator
+- Generates unique coding problems tailored to your weak areas
+- Powered by **AWS Bedrock — Claude Haiku**
+- Select topic (Arrays, Strings, Loops, Linked Lists, Dynamic Programming, Stacks)
+- Select difficulty (Easy / Medium / Hard)
+- Includes title, description, examples, test cases, and starter code in Python, JavaScript & Java
 
----
+### Memory-Powered Hints
+- **Before/After Memory toggle** — compare personalised vs generic AI responses side-by-side
+- Memory ON: Hindsight recalls past mistakes relevant to the current problem and warns proactively
+- Memory OFF: standard generic hint with no context
 
-### 3. Memory-Based Learning (Hindsight)
+### Code Editor & Execution
+- **Monaco Editor** — the same editor used in VS Code
+- Python, JavaScript, and Java support
+- Real-time execution against test cases on the server
+- Per-test-case results with expected vs actual output
+- Anti-cheat: tab switch detection + countdown timer
 
-Codemind stores and uses past attempts to guide future feedback.
+### AI Submission Feedback
+- Mistake classification: `null_check`, `index_error`, `time_complexity`, `syntax_error`, `edge_case`, `logic_error`
+- Three-metric AI score: **Correctness / Efficiency / Style**
+- Feedback stored back into Hindsight memory for future personalisation
 
-* Tracks user submissions per problem
-* Identifies repeated mistakes
-* Adapts hints based on patterns
+### Memory Profile
+- **INSIGHTS tab**: weak areas, common mistakes, streak, AI recommendation
+- **HINDSIGHT tab**: cloud memories stored via Hindsight API
+- **HISTORY tab**: local session attempt history with timestamps
 
-Example:
-
-> First attempt → generic hint
-> Third attempt → targeted explanation based on repeated error
-
----
-
-### 4. Beginner-Friendly by Design
-
-* Focuses on clarity over correctness
-* Helps users get unstuck
-* Reduces frustration loops
-
----
-
-## How It Works
-
-### High-Level Architecture
-
-```
-Frontend (UI)
-    ↓
-Backend (Python API)
-    ↓
-Execution Engine (Sandbox)
-    ↓
-AI Feedback Layer
-    ↓
-Memory Layer (Hindsight)
-```
-
----
-
-## Core Idea: Learning from Attempts
-
-Instead of treating each submission independently, Codemind models them as a sequence.
-
-### Basic Flow
-
-```python
-def handle_submission(user_id, code, problem_id):
-    result = execute(code)
-
-    event = {
-        "user_id": user_id,
-        "problem_id": problem_id,
-        "code": code,
-        "result": result
-    }
-
-    store_event(event)
-
-    history = retrieve_relevant_attempts(user_id, problem_id)
-
-    feedback = generate_feedback(code, result, history)
-
-    return feedback
-```
-
----
-
-## Memory Layer (Hindsight Integration)
-
-Codemind uses Hindsight to turn past attempts into actionable signals.
-
-### What Gets Stored
-
-* User code
-* Execution result
-* Error type (classified)
-* Problem context
-
-```python
-memory.store(
-    user_id=user_id,
-    input=code,
-    output=result,
-    metadata={
-        "problem_id": problem_id,
-        "error_type": classify_error(result)
-    }
-)
-```
-
----
-
-### How Retrieval Works
-
-Instead of passing all history, we retrieve relevant patterns:
-
-```python
-patterns = memory.retrieve(
-    user_id=user_id,
-    filters={
-        "problem_id": problem_id,
-        "error_type": "recursion"
-    },
-    limit=3
-)
-```
-
----
-
-## Why This Matters
-
-Without memory:
-
-* Same mistake → same generic hint
-
-With memory:
-
-* Same mistake → targeted feedback referencing past attempts
-
-This creates a **learning loop**, not just evaluation.
-
----
-
-## Example Behavior
-
-**Before:**
-
-> "Check your base case."
-
-**After:**
-
-> "You're repeating the same recursion mistake from your previous attempt — your base case still doesn’t stop at n == 0."
+### Leaderboard
+- Global ranking by score (10 pts per problem + accuracy bonus)
+- Live stats: problems solved, accuracy %, sessions
 
 ---
 
 ## Tech Stack
 
-* Backend: Python
-* Execution: Sandbox (Firecracker or equivalent)
-* AI Layer: LLM-based feedback generation
-* Memory: Hindsight
+| Layer | Technology |
+|---|---|
+| Frontend | React 18 + Vite |
+| Code Editor | Monaco Editor |
+| Styling | Custom CSS3 + Tailwind |
+| Backend | Python + FastAPI |
+| AI | AWS Bedrock — Claude Haiku |
+| Memory | Hindsight API |
+| Code Runner | Python asyncio subprocess (multi-language) |
+| Frontend Hosting | Vercel |
+| Backend Hosting | Render |
 
 ---
 
-## Setup
+## Getting Started
+
+### Prerequisites
+- Python 3.11+
+- Node.js 18+
+- AWS account with Bedrock access enabled (`us-east-1`)
+- Hindsight API key from [hindsight.vectorize.io](https://hindsight.vectorize.io)
+
+### Backend Setup
 
 ```bash
-git clone https://github.com/your-username/codemind.git
-cd codemind
+cd backend
 pip install -r requirements.txt
-python app.py
+```
+
+Create `backend/.env`:
+
+```env
+AWS_BEDROCK_API_KEY=your_bedrock_key
+AWS_ACCESS_KEY_ID=your_access_key        # alternative auth
+AWS_SECRET_ACCESS_KEY=your_secret_key    # alternative auth
+AWS_REGION=us-east-1
+HINDSIGHT_API_KEY=your_hindsight_key
+HINDSIGHT_BASE_URL=https://api.hindsight.vectorize.io
+HINDSIGHT_BANK_ID=CodeMind
+```
+
+Run the backend:
+
+```bash
+uvicorn main:app --reload
+# Starts on http://127.0.0.1:8000
+```
+
+### Frontend Setup
+
+```bash
+cd frontend
+npm install
+npm run dev
+# Starts on http://localhost:5173
 ```
 
 ---
 
-## Future Improvements
+## Deployment
 
-* Better error classification
-* Memory decay / relevance scoring
-* Multi-language support expansion
-* Smarter hint generation strategies
+### Backend → Render
+
+| Setting | Value |
+|---|---|
+| Root Directory | `backend` |
+| Runtime | Python 3 |
+| Build Command | `pip install -r requirements.txt` |
+| Start Command | `uvicorn main:app --host 0.0.0.0 --port $PORT` |
+
+Add all environment variables in Render → Settings → Environment.
+
+### Frontend → Vercel
+
+| Setting | Value |
+|---|---|
+| Root Directory | `frontend` |
+| Framework | Vite |
+| Build Command | `npm run build` |
+| Output Directory | `dist` |
+
+Add environment variable in Vercel → Settings → Environment Variables:
+
+```
+VITE_API_URL=https://your-render-url.onrender.com
+```
+
+---
+
+## API Reference
+
+### Auth
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/signup` | Create account |
+| POST | `/login` | Login |
+| POST | `/guest` | Guest session |
+
+### Problems
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/problems` | Get problem library |
+| POST | `/generate-problem` | AI-generate problem for user |
+| GET | `/daily-challenge` | Today's daily challenge |
+
+### Execution & Feedback
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/run-code` | Execute code against test cases |
+| POST | `/submit` | Submit + get AI feedback |
+| POST | `/hint` | Get memory-powered or generic hint |
+| POST | `/optimize` | Code optimization analysis |
+
+### Memory & Analytics
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/learning-insights/:user_id` | AI learning insights |
+| GET | `/memory/:user_id` | Hindsight memories + local history |
+| GET | `/leaderboard` | Top 20 leaderboard |
+| GET | `/status` | API health check |
 
 ---
 
-## Philosophy
+## How Memory Works
 
-Codemind is built on a simple belief:
+```
+Session 1: User struggles with null checks in arrays
+→ Backend stores: "Failed Two Sum | mistake: null_check | language: python"
+   via Hindsight retain()
 
-> If your system doesn’t learn from past attempts, it’s not teaching—it’s just reacting.
+Session 2: User attempts a new arrays problem
+→ Backend calls Hindsight recall()
+→ Returns: past null_check pattern
+→ AI hint: "⚠️ Based on your history, you often miss null/empty checks —
+            verify nums is not None before accessing indices."
+```
+
+The **Before/After toggle** in the navbar lets you instantly switch between memory-enhanced and generic AI responses to see the difference.
+
+---
+
+## Project Structure
+
+```
+CodeMind/
+├── backend/
+│   ├── main.py              # FastAPI app — all routes and business logic
+│   ├── hindsight_client.py  # Hindsight API wrapper (retain, recall, list)
+│   ├── problems.json        # Curated problem library (6 problems)
+│   └── requirements.txt
+└── frontend/
+    ├── src/
+    │   ├── pages/
+    │   │   ├── Dashboard.jsx        # Problem list + AI generator
+    │   │   ├── ProblemSolver.jsx    # Editor + execution + hints
+    │   │   ├── MemoryProfile.jsx    # Insights + history + memories
+    │   │   ├── Leaderboard.jsx      # Global rankings
+    │   │   └── AuthScreen.jsx       # Login / signup / guest
+    │   ├── api.js           # Centralised API helper (uses VITE_API_URL)
+    │   ├── App.jsx          # Root — nav, memory toggle, auth state
+    │   ├── icons.jsx        # Custom SVG icon set
+    │   └── index.css        # Dark theme, animations, component styles
+    ├── vite.config.js
+    └── package.json
+```
 
 ---
 
-## Contributing
+## Live Demo
 
-PRs are welcome.
-Focus areas:
+**[codemind-tau.vercel.app](https://codemind-tau.vercel.app/)**
 
-* Feedback quality
-* Memory retrieval strategies
-* Execution safety improvements
+- Click **Continue as Guest** to explore without creating an account
+- Try the **AI Generator** — select a topic and click Generate
+- Solve a problem and click **Smart Hint** — toggle memory ON/OFF to see the difference
+- Submit a solution to get AI feedback and a score
+
+---
+
+## Future Scope
+
+- Persistent database (MongoDB Atlas / Supabase) to replace in-memory stores
+- JWT authentication with refresh tokens
+- C++, Rust, Go language support
+- 100+ problem library with adaptive difficulty
+- Streaks, badges, and daily goals
+- Mobile app (React Native)
+- Multi-language UI (Telugu, Hindi, Tamil)
 
 ---
 
-## License
-
-MIT
-
----
+*Built with AWS Bedrock + Hindsight Memory | Deployed on Vercel + Render*
