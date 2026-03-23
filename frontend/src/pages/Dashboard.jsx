@@ -33,7 +33,7 @@ function InsightsPanel({ userId }) {
   const [loading, setLoading]   = useState(true)
 
   useEffect(() => {
-    api.get(`/learning-insights/${userId}`).then(r => { setInsights(r.data); setLoading(false) }).catch(() => setLoading(false))
+    api.get(`/learning-insights/${userId}`).then(r => { setInsights(r); setLoading(false) }).catch(() => setLoading(false))
   }, [userId])
 
   if (loading) return <div className="shimmer" style={{ height:120,borderRadius:14 }} />
@@ -86,39 +86,14 @@ function AIGeneratorPanel({ userId, onProblemGenerated }) {
   const generate = async () => {
     setLoading(true); setResult(null)
     try {
-      // Try backend first
       const r = await api.post('/generate-problem', { user_id: userId, topic, difficulty: diff })
-      if (r.data?.problem) {
-        setResult(r.data)
+      if (r?.problem) {
+        setResult(r)
       } else {
-        // Backend failed (no Bedrock) — call Anthropic API directly
-        throw new Error('backend_fallback')
+        setResult({ error: r?.error || 'Failed to generate problem. Please try again.' })
       }
     } catch(e) {
-      // Fallback: call Anthropic API directly from frontend
-      try {
-        const prompt = `Generate a ${diff} coding problem on topic: ${topic}.
-Return ONLY valid JSON with no markdown, no explanation, no code fences. The JSON must be:
-{"id":"slug","title":"Title","difficulty":"${diff}","topic":"${topic}","description":"Full problem description here","examples":[{"input":"example input","output":"example output"}],"test_cases":[{"input":"test input","expected_output":"expected output"}],"starter_code":{"python":"# Write your solution here\\ndef solution():\\n    pass\\n","javascript":"// Write your solution here\\nfunction solution() {\\n    \\n}\\n","java":"// Write your solution here\\npublic class Solution {\\n    \\n}\\n"}}`
-
-        const resp = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 1200,
-            system: 'You are a coding problem designer. Return ONLY valid JSON with no markdown fences, no explanation, nothing else.',
-            messages: [{ role: 'user', content: prompt }]
-          })
-        })
-        const data = await resp.json()
-        const raw = data?.content?.[0]?.text || ''
-        const clean = raw.replace(/```[a-z]*\n?/g, '').replace(/```/g, '').trim()
-        const problem = JSON.parse(clean)
-        setResult({ problem, tailored_to: [] })
-      } catch(err) {
-        setResult({ error: 'Failed to generate problem. Please try again.' })
-      }
+      setResult({ error: 'Failed to reach backend. Check your connection.' })
     }
     setLoading(false)
   }
@@ -199,7 +174,7 @@ export default function Dashboard({ userId, onSelectProblem, memoryMode }) {
   const [hovered, setHovered]   = useState(null)
   const [search, setSearch]     = useState('')
 
-  useEffect(() => { api.get('/problems').then(r => { setProblems(r.data.problems); setLoading(false) }).catch(() => setLoading(false)) }, [])
+  useEffect(() => { api.get('/problems').then(r => { setProblems(r.problems); setLoading(false) }).catch(() => setLoading(false)) }, [])
 
   const filtered = problems.filter(p => filter==='All' || p.difficulty===filter).filter(p => !search || p.title.toLowerCase().includes(search.toLowerCase()) || p.topic.toLowerCase().includes(search.toLowerCase()))
 
