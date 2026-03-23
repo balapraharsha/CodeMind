@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { api } from '../api'
 import { Icon } from '../icons.jsx'
 
 export default function Leaderboard({ userId }) {
@@ -7,7 +7,8 @@ export default function Leaderboard({ userId }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    axios.get('/api/leaderboard').then(r => { setData(r.data.leaderboard); setLoading(false) }).catch(() => setLoading(false))
+    api.get('/leaderboard')
+  .then(r => { setData(r.leaderboard); setLoading(false) })
   }, [userId])
 
   const RANK_COLORS = ['var(--amber)','#94a3b8','#cd7f32']
