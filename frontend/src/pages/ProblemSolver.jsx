@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Editor from '@monaco-editor/react'
 import ReactMarkdown from 'react-markdown'
-import axios from 'axios'
+import { api } from '../api'
 import { Icon } from '../icons.jsx'
 
 const LANGS = ['python','javascript','java']
@@ -97,8 +97,8 @@ export default function ProblemSolver({ userId, problem, onBack, memoryMode }) {
   const handleRun = async () => {
     setRunning(true); setTestResults(null)
     try {
-      const r = await axios.post('/api/run-code', { code, language:lang, test_cases:problem.test_cases })
-      setTestResults(r.data); setTab('results')
+      const r = await api.post('/run-code', { code, language:lang, test_cases:problem.test_cases })
+setTestResults(r); setTab('results')
       const pct = Math.round((r.data.passed/r.data.total)*100)
       showToast(`${r.data.passed}/${r.data.total} tests passed`, pct===100?'success':pct>0?'warn':'error')
     } catch { showToast('Run failed — check backend is running', 'error') }
@@ -109,18 +109,22 @@ export default function ProblemSolver({ userId, problem, onBack, memoryMode }) {
     setSubmitting(true); setFeedback(null); setAiScore(null)
     let results = testResults
     if (!results) {
-      try { const r = await axios.post('/api/run-code',{code,language:lang,test_cases:problem.test_cases}); results=r.data; setTestResults(r.data) }
+      try { const r = await api.post('/run-code',{code,language:lang,test_cases:problem.test_cases})
+results = r
+setTestResults(r) }
       catch { setSubmitting(false); showToast('Could not run code first','error'); return }
     }
     const timeTaken = Math.floor((Date.now() - startTime) / 1000)
     try {
-      const r = await axios.post('/api/submit', {
+      const r = await api.post('/submit', {
         user_id:userId, problem_id:problem.id, problem_title:problem.title,
         problem_description:problem.description, code, language:lang,
         test_results:results, time_taken:timeTaken, memory_mode:memoryMode
       })
-      setFeedback(r.data.feedback); setMistakeTypes(r.data.mistake_types||[]); setAiScore(r.data.ai_score); setTab('feedback')
-      const memMsg = r.data.memory_stored ? ' · Saved to memory' : ''
+      setFeedback(r.feedback)
+setMistakeTypes(r.mistake_types||[])
+setAiScore(r.ai_score)
+const memMsg = r.memory_stored ? ' · Saved to memory' : ''
       showToast('Analysis complete' + memMsg, 'success')
     } catch(e) {
       showToast('Submit failed: ' + (e.response?.data?.detail || e.message), 'error')
@@ -131,14 +135,14 @@ export default function ProblemSolver({ userId, problem, onBack, memoryMode }) {
   const handleHint = async () => {
     setHinting(true); setHint(null); setTab('hint')
     try {
-      const r = await axios.post('/api/hint',{
+      const r = await api.post('/hint',{
         user_id:userId, problem_id:problem.id, problem_title:problem.title,
         problem_description:problem.description, code, language:lang, memory_mode:memoryMode
       })
-      setHint(r.data)
-      if(r.data.personalized) showToast('Personalized from your memory', 'info')
+      setHint(r)
+if(r.personalized) showToast('Personalized from your memory', 'info')
       else if(!memoryMode) showToast('Memory OFF — generic hint', 'warn')
-    } catch(e) { setHint({ hint:'Failed to get hint: '+(e.response?.data?.detail||e.message), personalized:false }) }
+    } catch(e) { setHint({ hint:'Failed to get hint: '+(e?.detail || e.message), personalized:false }) }
     finally { setHinting(false) }
   }
 
