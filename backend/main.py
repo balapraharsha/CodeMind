@@ -8,7 +8,13 @@ from collections import defaultdict, Counter
 
 load_dotenv()
 app = FastAPI(title="CodeMind API v3")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://codemind-tau.vercel.app", "http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 # ── In-memory stores ────────────────────────────────────────────────────────
 leaderboard_store = {}
