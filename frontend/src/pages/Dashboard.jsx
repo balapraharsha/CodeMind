@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { api } from '../api'
 import { Icon } from '../icons.jsx'
 
 const DIFF = { Easy:'b-easy', Medium:'b-medium', Hard:'b-hard' }
@@ -33,7 +33,7 @@ function InsightsPanel({ userId }) {
   const [loading, setLoading]   = useState(true)
 
   useEffect(() => {
-    axios.get(`/api/learning-insights/${userId}`).then(r => { setInsights(r.data); setLoading(false) }).catch(() => setLoading(false))
+    api.get(`/learning-insights/${userId}`).then(r => { setInsights(r.data); setLoading(false) }).catch(() => setLoading(false))
   }, [userId])
 
   if (loading) return <div className="shimmer" style={{ height:120,borderRadius:14 }} />
@@ -87,7 +87,7 @@ function AIGeneratorPanel({ userId, onProblemGenerated }) {
     setLoading(true); setResult(null)
     try {
       // Try backend first
-      const r = await axios.post('/api/generate-problem', { user_id: userId, topic, difficulty: diff })
+      const r = await api.post('/generate-problem', { user_id: userId, topic, difficulty: diff })
       if (r.data?.problem) {
         setResult(r.data)
       } else {
@@ -199,7 +199,7 @@ export default function Dashboard({ userId, onSelectProblem, memoryMode }) {
   const [hovered, setHovered]   = useState(null)
   const [search, setSearch]     = useState('')
 
-  useEffect(() => { axios.get('/api/problems').then(r => { setProblems(r.data.problems); setLoading(false) }).catch(() => setLoading(false)) }, [])
+  useEffect(() => { api.get('/problems').then(r => { setProblems(r.data.problems); setLoading(false) }).catch(() => setLoading(false)) }, [])
 
   const filtered = problems.filter(p => filter==='All' || p.difficulty===filter).filter(p => !search || p.title.toLowerCase().includes(search.toLowerCase()) || p.topic.toLowerCase().includes(search.toLowerCase()))
 
