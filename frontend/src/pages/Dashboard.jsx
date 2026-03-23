@@ -86,9 +86,40 @@ function AIGeneratorPanel({ userId, onProblemGenerated }) {
   const generate = async () => {
     setLoading(true); setResult(null)
     try {
+      // Try backend first
       const r = await axios.post('/api/generate-problem', { user_id: userId, topic, difficulty: diff })
-      setResult(r.data)
-    } catch(e) { setResult({ error: e.message }) }
+      if (r.data?.problem) {
+        setResult(r.data)
+      } else {
+        // Backend failed (no Bedrock) — call Anthropic API directly
+        throw new Error('backend_fallback')
+      }
+    } catch(e) {
+      // Fallback: call Anthropic API directly from frontend
+      try {
+        const prompt = `Generate a ${diff} coding problem on topic: ${topic}.
+Return ONLY valid JSON with no markdown, no explanation, no code fences. The JSON must be:
+{"id":"slug","title":"Title","difficulty":"${diff}","topic":"${topic}","description":"Full problem description here","examples":[{"input":"example input","output":"example output"}],"test_cases":[{"input":"test input","expected_output":"expected output"}],"starter_code":{"python":"# Write your solution here\\ndef solution():\\n    pass\\n","javascript":"// Write your solution here\\nfunction solution() {\\n    \\n}\\n","java":"// Write your solution here\\npublic class Solution {\\n    \\n}\\n"}}`
+
+        const resp = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 1200,
+            system: 'You are a coding problem designer. Return ONLY valid JSON with no markdown fences, no explanation, nothing else.',
+            messages: [{ role: 'user', content: prompt }]
+          })
+        })
+        const data = await resp.json()
+        const raw = data?.content?.[0]?.text || ''
+        const clean = raw.replace(/```[a-z]*\n?/g, '').replace(/```/g, '').trim()
+        const problem = JSON.parse(clean)
+        setResult({ problem, tailored_to: [] })
+      } catch(err) {
+        setResult({ error: 'Failed to generate problem. Please try again.' })
+      }
+    }
     setLoading(false)
   }
 

@@ -121,6 +121,27 @@ def call_bedrock(system_prompt: str, user_message: str, max_tokens: int = 1024) 
 
 
 def _fallback_response(msg: str) -> str:
+    if "generate" in msg.lower() and "problem" in msg.lower():
+        # Return a valid fallback problem JSON so parse doesn't fail
+        import re as _re
+        topic_m = _re.search(r'topic:\s*(\w[\w\s]*)', msg)
+        diff_m  = _re.search(r'(Easy|Medium|Hard)', msg)
+        topic   = topic_m.group(1).strip() if topic_m else "Arrays"
+        diff    = diff_m.group(1) if diff_m else "Easy"
+        return json.dumps({
+            "id": "fallback-problem",
+            "title": f"{diff} {topic} Problem",
+            "difficulty": diff,
+            "topic": topic,
+            "description": f"Given an array of integers, find the sum of all elements. Return the total sum.",
+            "examples": [{"input": "[1, 2, 3]", "output": "6"}],
+            "test_cases": [{"input": "[1, 2, 3]", "expected_output": "6"}, {"input": "[]", "expected_output": "0"}],
+            "starter_code": {
+                "python": "def solution(nums):\n    # Write your solution here\n    pass\n",
+                "javascript": "function solution(nums) {\n    // Write your solution here\n}\n",
+                "java": "public class Solution {\n    public int solution(int[] nums) {\n        // Write your solution here\n        return 0;\n    }\n}\n"
+            }
+        })
     if "hint" in msg.lower():
         return "**Hint:** Break the problem into smaller steps. Check your edge cases (empty input, single element). Make sure your loop boundaries are correct."
     if "optimize" in msg.lower() or "complexity" in msg.lower():
